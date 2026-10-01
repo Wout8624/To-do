@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="To-Do" Icon="app.ico" Width="520" Height="600" MinWidth="340" MinHeight="260"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
-        Background="#17181C" Foreground="#E6E6E6" FontFamily="Segoe UI" FontSize="15">
+        Background="#17181C" Foreground="#E6E6E6" FontFamily="Segoe UI" FontSize="17">
 
     <Window.Resources>
         <Color x:Key="TextColor">#E6E6E6</Color>
@@ -42,7 +42,7 @@
         </Style>
 
         <DataTemplate x:Key="TaskRow">
-            <Grid x:Name="Row" Background="Transparent" Height="34">
+            <Grid x:Name="Row" Background="Transparent" Height="38">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -146,6 +146,10 @@
     </Window.Resources>
 
     <Grid Margin="24,20">
+        <!-- Ctrl + scroll / Ctrl +/-/0 scales the whole UI, crisp at any size -->
+        <Grid.LayoutTransform>
+            <ScaleTransform x:Name="Zoom" />
+        </Grid.LayoutTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

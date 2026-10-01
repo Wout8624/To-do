@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,6 +10,17 @@ static class Store
     static readonly string Dir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FastTodo");
     static readonly string FilePath = Path.Combine(Dir, "tasks.json");
+    static readonly string ZoomPath = Path.Combine(Dir, "zoom.txt");
+
+    public static double LoadZoom() =>
+        File.Exists(ZoomPath) &&
+        double.TryParse(File.ReadAllText(ZoomPath), NumberStyles.Float, CultureInfo.InvariantCulture, out var z) ? z : 1;
+
+    public static void SaveZoom(double zoom)
+    {
+        Directory.CreateDirectory(Dir);
+        File.WriteAllText(ZoomPath, zoom.ToString(CultureInfo.InvariantCulture));
+    }
 
     public static List<TodoItem> Load()
     {

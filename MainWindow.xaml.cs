@@ -23,8 +23,37 @@ public partial class MainWindow : Window
         TaskList.ItemsSource = _items;
         UpdateTotal();
 
+        SetZoom(Store.LoadZoom(), save: false);
+        PreviewMouseWheel += (_, e) =>
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control) return;
+            SetZoom(Zoom.ScaleX + (e.Delta > 0 ? 0.1 : -0.1));
+            e.Handled = true;
+        };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control) return;
+            double? z = e.Key switch
+            {
+                Key.OemPlus or Key.Add => Zoom.ScaleX + 0.1,
+                Key.OemMinus or Key.Subtract => Zoom.ScaleX - 0.1,
+                Key.D0 or Key.NumPad0 => 1,
+                _ => null
+            };
+            if (z is not double v) return;
+            SetZoom(v);
+            e.Handled = true;
+        };
+
         MouseDown += (_, _) => Keyboard.ClearFocus(); // click empty space = done editing
         Loaded += (_, _) => NewTask.Focus();
+    }
+
+    void SetZoom(double z, bool save = true)
+    {
+        z = Math.Round(Math.Clamp(z, 0.7, 2.5), 1);
+        Zoom.ScaleX = Zoom.ScaleY = z;
+        if (save) Store.SaveZoom(z);
     }
 
     void Item_Changed(object? sender, PropertyChangedEventArgs e)
