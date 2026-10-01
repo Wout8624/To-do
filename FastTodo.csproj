@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>FastTodo</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
 
     <!-- Startup speed: precompile to native code so the JIT has almost nothing to do at launch -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -14,5 +15,9 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="app.ico" />
+  </ItemGroup>
 
 </Project>
