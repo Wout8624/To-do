@@ -1,0 +1,182 @@
+<Window x:Class="FastTodo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="To-Do" Width="520" Height="600" MinWidth="340" MinHeight="260"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        Background="#17181C" Foreground="#E6E6E6" FontFamily="Segoe UI" FontSize="15">
+
+    <Window.Resources>
+        <Color x:Key="TextColor">#E6E6E6</Color>
+        <Color x:Key="GreenColor">#3DDC84</Color>
+
+        <!-- A TextBox that looks like plain text: click it and type. -->
+        <Style x:Key="Inline" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="#E6E6E6" />
+            <Setter Property="CaretBrush" Value="#E6E6E6" />
+            <Setter Property="SelectionBrush" Value="#3B82F6" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="DeleteButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#6B7079" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="ToolTip" Value="Delete" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" Padding="10,0,2,0">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#FF6B6B" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="TaskRow">
+            <Grid x:Name="Row" Background="Transparent" Height="34">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- ✅ drawn as a shape: WPF can't render colour emoji, so this mimics it -->
+                <Border x:Name="Check" Width="18" Height="18" CornerRadius="4" Margin="0,0,10,0"
+                        Background="#2EA043" RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <ScaleTransform ScaleX="0" ScaleY="0" />
+                    </Border.RenderTransform>
+                    <TextBlock Text="✔" Foreground="White" FontSize="12" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <TextBox x:Name="NameBox" Grid.Column="1" Style="{StaticResource Inline}"
+                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                         KeyDown="Box_KeyDown" RenderTransformOrigin="0,0.5">
+                    <TextBox.Foreground>
+                        <SolidColorBrush Color="{StaticResource TextColor}" />
+                    </TextBox.Foreground>
+                    <TextBox.RenderTransform>
+                        <ScaleTransform />
+                    </TextBox.RenderTransform>
+                </TextBox>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                            TextElement.Foreground="#8A8F98">
+                    <TextBlock Text="[" VerticalAlignment="Center" />
+                    <TextBox Style="{StaticResource Inline}" Foreground="#8A8F98" MinWidth="10"
+                             Text="{Binding PercentText, UpdateSourceTrigger=PropertyChanged}"
+                             PreviewMouseLeftButtonDown="Percent_PreviewMouseDown"
+                             LostKeyboardFocus="Percent_LostFocus" KeyDown="Box_KeyDown" />
+                    <TextBlock Text="% complete]" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Button x:Name="Del" Grid.Column="3" Content="✕" Opacity="0"
+                        Style="{StaticResource DeleteButton}" Click="Delete_Click" />
+            </Grid>
+
+            <DataTemplate.Triggers>
+                <Trigger SourceName="Row" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Del" Property="Opacity" Value="1" />
+                </Trigger>
+
+                <!-- The reward: name fades to green, gets a tiny bounce, checkmark pops in. -->
+                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetName="NameBox"
+                                                Storyboard.TargetProperty="(TextBox.Foreground).(SolidColorBrush.Color)"
+                                                To="{StaticResource GreenColor}" Duration="0:0:0.4" />
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="NameBox"
+                                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.12" Value="1.06" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.35" Value="1" />
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="NameBox"
+                                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.12" Value="1.06" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.35" Value="1" />
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimation Storyboard.TargetName="Check"
+                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1" Duration="0:0:0.45">
+                                    <DoubleAnimation.EasingFunction>
+                                        <BackEase EasingMode="EaseOut" Amplitude="0.7" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetName="Check"
+                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1" Duration="0:0:0.45">
+                                    <DoubleAnimation.EasingFunction>
+                                        <BackEase EasingMode="EaseOut" Amplitude="0.7" />
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetName="NameBox"
+                                                Storyboard.TargetProperty="(TextBox.Foreground).(SolidColorBrush.Color)"
+                                                To="{StaticResource TextColor}" Duration="0:0:0.25" />
+                                <DoubleAnimation Storyboard.TargetName="Check"
+                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="0" Duration="0:0:0.15" />
+                                <DoubleAnimation Storyboard.TargetName="Check"
+                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="0" Duration="0:0:0.15" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Add a task -->
+        <Border BorderBrush="#2A2C33" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
+            <Grid>
+                <TextBlock Text="+ Add a task and press Enter" Foreground="#5C616B" IsHitTestVisible="False">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text.Length, ElementName=NewTask}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBox x:Name="NewTask" Style="{StaticResource Inline}" KeyDown="NewTask_KeyDown" />
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="TaskList" ItemTemplate="{StaticResource TaskRow}" />
+        </ScrollViewer>
+
+        <Border Grid.Row="2" BorderBrush="#2A2C33" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,10,0,0">
+            <TextBlock x:Name="Total" FontWeight="SemiBold" />
+        </Border>
+    </Grid>
+</Window>
