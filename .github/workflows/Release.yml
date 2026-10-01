@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # needed to create releases
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      # Self-contained single exe: runs on any 64-bit Windows PC, no .NET install needed.
+      - name: Publish
+        run: >
+          dotnet publish FastTodo.csproj -c Release -r win-x64 -o out
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=none
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.0.${{ github.run_number }}
+        run: gh release create $env:TAG out/FastTodo.exe --title "FastTodo $env:TAG" --target $env:GITHUB_SHA --generate-notes --latest
