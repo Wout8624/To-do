@@ -10,6 +10,8 @@ public sealed class TodoItem : INotifyPropertyChanged
     string _name = "";
     double _percent;
     string? _percentText; // raw text while the user is typing
+    string _note = "";
+    bool _noteOpen;
 
     public string Name
     {
@@ -31,6 +33,22 @@ public sealed class TodoItem : INotifyPropertyChanged
     }
 
     [JsonIgnore] public bool IsDone => _percent >= 100;
+
+    public string Note
+    {
+        get => _note;
+        set { if (_note != value) { _note = value ?? ""; Raise(); Raise(nameof(ShowNote)); } }
+    }
+
+    // True while the note is being added/edited, so an empty note line stays visible.
+    [JsonIgnore]
+    public bool NoteOpen
+    {
+        get => _noteOpen;
+        set { if (_noteOpen != value) { _noteOpen = value; Raise(nameof(ShowNote)); } }
+    }
+
+    [JsonIgnore] public bool ShowNote => _noteOpen || _note.Length > 0;
 
     // Bound to the percent box: accepts "25", "12.5" or "12,5" and updates Percent live.
     [JsonIgnore]

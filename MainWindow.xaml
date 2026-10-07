@@ -1,7 +1,7 @@
 <Window x:Class="FastTodo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="To-Do" Icon="app.ico" Width="520" Height="600" MinWidth="340" MinHeight="260"
+        Title="To-Do" Icon="app.ico" SizeToContent="WidthAndHeight" MinWidth="420" MinHeight="260"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         Background="#17181C" Foreground="#E6E6E6" FontFamily="Segoe UI" FontSize="17">
 
@@ -20,11 +20,11 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <Style x:Key="DeleteButton" TargetType="Button">
+        <Style x:Key="RowButton" TargetType="Button">
             <Setter Property="Foreground" Value="#6B7079" />
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="ToolTip" Value="Delete" />
+            <Setter Property="Opacity" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -36,16 +36,27 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#E6E6E6" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource RowButton}">
+            <Setter Property="ToolTip" Value="Delete" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Foreground" Value="#FF6B6B" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <DataTemplate x:Key="TaskRow">
-            <Grid x:Name="Row" Background="Transparent" Height="38">
+            <StackPanel x:Name="Row" Background="Transparent">
+            <Grid Height="38">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -81,14 +92,37 @@
                     <TextBlock Text="% complete]" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <Button x:Name="Del" Grid.Column="3" Content="✕" Opacity="0"
+                <Button x:Name="NoteBtn" Grid.Column="3" Content="✎" ToolTip="Add / edit note"
+                        Style="{StaticResource RowButton}" Click="Note_Click" />
+                <Button x:Name="Del" Grid.Column="4" Content="✕"
                         Style="{StaticResource DeleteButton}" Click="Delete_Click" />
             </Grid>
+
+            <!-- Note:  └──▸ note text  (small and muted, under the task title) -->
+            <Grid x:Name="NoteLine" Margin="31,-8,0,6" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Path Data="M 1,0 V 10 H 18 M 14,6.5 L 18,10 L 14,13.5" Stroke="#4A4E57" StrokeThickness="1.3"
+                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      VerticalAlignment="Top" Margin="0,0,7,0" />
+                <TextBox x:Name="NoteBox" Grid.Column="1" Style="{StaticResource Inline}"
+                         FontSize="13" Foreground="#7C818A" TextWrapping="Wrap"
+                         VerticalAlignment="Top" Margin="0,1,0,0"
+                         Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                         KeyDown="Box_KeyDown" LostKeyboardFocus="Note_LostFocus" />
+            </Grid>
+            </StackPanel>
 
             <DataTemplate.Triggers>
                 <Trigger SourceName="Row" Property="IsMouseOver" Value="True">
                     <Setter TargetName="Del" Property="Opacity" Value="1" />
+                    <Setter TargetName="NoteBtn" Property="Opacity" Value="1" />
                 </Trigger>
+                <DataTrigger Binding="{Binding ShowNote}" Value="True">
+                    <Setter TargetName="NoteLine" Property="Visibility" Value="Visible" />
+                </DataTrigger>
 
                 <!-- The reward: name fades to green, gets a tiny bounce, checkmark pops in. -->
                 <DataTrigger Binding="{Binding IsDone}" Value="True">

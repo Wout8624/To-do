@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace FastTodo;
 
@@ -58,7 +59,7 @@ public partial class MainWindow : Window
 
     void Item_Changed(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(TodoItem.Name) or nameof(TodoItem.Percent)) Changed();
+        if (e.PropertyName is nameof(TodoItem.Name) or nameof(TodoItem.Percent) or nameof(TodoItem.Note)) Changed();
     }
 
     void Changed()
@@ -84,6 +85,24 @@ public partial class MainWindow : Window
 
     void Delete_Click(object sender, RoutedEventArgs e) =>
         _items.Remove((TodoItem)((FrameworkElement)sender).DataContext);
+
+    // ✎ opens the note line (if hidden) and puts the cursor at the end of the note.
+    void Note_Click(object sender, RoutedEventArgs e)
+    {
+        var button = (FrameworkElement)sender;
+        var row = (ContentPresenter)button.TemplatedParent;
+        var box = (TextBox)row.ContentTemplate.FindName("NoteBox", row);
+        ((TodoItem)button.DataContext).NoteOpen = true;
+        Dispatcher.InvokeAsync(() => { box.Focus(); box.CaretIndex = box.Text.Length; }, DispatcherPriority.Loaded);
+    }
+
+    // Leaving an empty note hides the line again.
+    void Note_LostFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        var item = (TodoItem)((FrameworkElement)sender).DataContext;
+        item.Note = item.Note.Trim();
+        item.NoteOpen = false;
+    }
 
     void Box_KeyDown(object sender, KeyEventArgs e)
     {
